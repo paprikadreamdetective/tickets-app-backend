@@ -12,14 +12,17 @@ class ProxyUser(UserServices):
     def auth(self, username, password):
         return self._real_subject.auth(username, password)
     
-    def username_login(self, username: str, password: str):
-        return self._real_subject.username_login(username, password)
+    def create_user(self, user):
+        return self._real_subject.create_user(user)
 
-    def username_register(self, username: str, password: str, name: str, lastname: str):
-        return self._real_subject.username_register(username, password, name, lastname)
+    def read_users(self):
+        return self._real_subject.read_users()
     
-    def email_login(self, username: str, password: str):
-        return self._real_subject.email_login(username, password)
+    def read_user(self, id_user: str):
+        return self._real_subject.read_user(id_user)
     
-    def email_register(self, email: str, password: str, name: str, lastname: str):
-        return self._real_subject.email_register(email, password, name, lastname)
+    def update_user(self, update_user):
+        return self._real_subject.update_user(update_user)
+    
+    def delete_user(self, id_user: str):
+        return self._real_subject.delete_user(id_user)

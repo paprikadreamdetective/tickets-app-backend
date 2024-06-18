@@ -1,7 +1,7 @@
 import sqlite3 
 import json
 from flask import Flask, render_template, request, redirect, url_for, flash
-from UserServices import UserServices
+from .UserServices import UserServices
 """
     In this script we are going to call
     the sql sentences for the db
