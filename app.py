@@ -7,7 +7,7 @@ def create_app():
     return app
 
 app = create_app()  # Creating the app
-app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+#app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
 from controller.controller import *
 

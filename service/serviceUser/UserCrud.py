@@ -1,231 +1,105 @@
-import sqlite3
+import sqlite3 
 import json
 from flask import Flask, render_template, request, redirect, url_for, flash
-from .UserServices import UserServices
-
+from UserServices import UserServices
 """
     In this script we are going to call
     the sql sentences for the db
 
 """
-
 class UserCrud(UserServices):
-    def __init__(self) -> None:
-        self._connection_db_users = self.conectar_bd()
+    def __init__(self, db_name: str) -> None:
+        self._db_name = db_name
+        self._connection_db_users = None
+    
+    def init_connection_db(self) -> None:
+        self._connection_db_users = sqlite3.connect(self._db_name)
 
-    def conectar_bd(self):
-        db_user_config = 'proyecto_pp.bd'
-        return sqlite3.connect(db_user_config)
-
-    def cerrar_bd(self, conn):
-        conn.close()
+    def close_connection_db(self) -> None:
+        self._connection_db_users.commit()
+        self._connection_db_users.close()
 
     def auth(self, username: str, password: str) -> bool:
         if username == 'user' and password == '123':
             return True
         else:
             return False
-
-    def username_register(self, username: str, password: str, name: str, lastname: str):
+        
+    def create_user(self, user: dict):
         try:
-            # Construir el diccionario del usuario
-            user = {
-                'Usuario': username,
-                'Nombre': name,
-                'Apellido': lastname,
-                'Contrasena': password
-            }
-            print('entra al CRUD')
-            # Verificar si ya existe un usuario con el mismo nombre de usuario
-            conn = self._connection_db_users
-            cursor = conn.cursor()
-            query_select = "SELECT * FROM users WHERE username = ?"
-            cursor.execute(query_select, (user['Usuario'],))
+            # Verificamos que el usuario si el usuario ya existe en la bd
+            
+            #conn = self._connection_db_users
+            self.init_connection_db()
+            cursor = self._connection_db_users.cursor()
+            query_select = "SELECT * FROM usuario WHERE id_usuario = ?"
+            cursor.execute(query_select, (user['id_usuario'],))
             existing_user = cursor.fetchone()
-
-            # Si el usuario no existe, proceder con la inserción
+            # Si no existe el usuario, lo insertamos en la db, si no, no realiza la insercion
             if not existing_user:
-                query_insert = "INSERT INTO users (username, uname, lastname, password) VALUES (?, ?, ?, ?)"
-                cursor.execute(query_insert, (user['Usuario'], user['Nombre'], user['Apellido'], user['Contrasena']))
-                conn.commit()
-                self.cerrar_bd(conn)
+                query_insert = '''
+                    INSERT INTO usuario (
+                        id_usuario, tipo_usuario, nombre_usuario, correo_usuario, password, area,
+                        marca_equipo, modelo_equipo, numero_serie_equipo, modelo_cargador,
+                        windows_version, RAM, procesador, disco_duro, tipo_disco_duro, tarjeta_video
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                '''
+                cursor.execute(query_insert, (
+                    user['id_usuario'], user['tipo_usuario'], user['nombre_usuario'], user['correo_usuario'],
+                    user['password'], user['area'], user['marca_equipo'], user['modelo_equipo'],
+                    user['numero_serie_equipo'], user['modelo_cargador'], user['windows_version'],
+                    user['RAM'], user['procesador'], user['disco_duro'], user['tipo_disco_duro'], user['tarjeta_video']
+                ))
+                self.close_connection_db()
                 print('Usuario insertado', user)
-                flash('Usuario agregado exitosamente!', 'success')
                 return 'Usuario insertado', 200
             else:
+                self.close_connection_db()
                 print("El usuario ya existe en la base de datos. No se ha realizado la inserción.")
-                flash('El Usuario ya existe!', 'danger')
                 return 'El usuario ya existe en la base de datos. No se ha realizado la inserción.', 400
-
         except Exception as e:
-            print('Error al insertar usuario por username', e)
-            return 'Error al insertar usuario por username', 500
-
-    def email_register(self, email: str, password: str, name: str, lastname: str):
-        try:
-            # Construir el diccionario del usuario
-            user = {
-                'Correo': email,
-                'Nombre': name,
-                'Apellido': lastname,
-                'Contrasena': password
-            }
-
-            # Verificar si ya existe un usuario con el mismo correo electrónico
-            conn = self._connection_db_users
-            cursor = conn.cursor()
-            query_select = "SELECT * FROM users WHERE email = ?"
-            cursor.execute(query_select, (user['Correo'],))
-            existing_user = cursor.fetchone()
-
-            # Si el usuario no existe, proceder con la inserción
-            if not existing_user:
-                query_insert = "INSERT INTO users (email, uname, lastname, password) VALUES (?, ?, ?, ?)"
-                cursor.execute(query_insert, (user['Correo'], user['Nombre'], user['Apellido'], user['Contrasena']))
-                conn.commit()
-                self.cerrar_bd(conn)
-                print('Usuario insertado por correo', user)
-                flash('Usuario agregado exitosamente!', 'success')
-                return 'Usuario insertado', 200
-            else:
-                print("El usuario ya existe en la base de datos. No se ha realizado la inserción.")
-                flash('El Correo ya existe!', 'danger')
-                return 'El usuario ya existe en la base de datos. No se ha realizado la inserción.', 400
-
-        except Exception as e:
-            print('Error al insertar usuario por correo', e)
+            print('Error al insertar usuario', e)
             return 'Error al insertar usuario', 500
 
-    def email_login(self, email: str, password: str):
-        try:
-            # Crear un diccionario con los datos del usuario
-            user = {
-                'Correo': email,
-                'Contrasena': password
-            }
+    # Leer todos los usuarios 
+    def read_users(self):
+        self.init_connection_db()
+        cursor = self._connection_db_users.cursor()
+        cursor.execute('SELECT * FROM usuario')
+        users = cursor.fetchall()
+        self.close_connection_db()
+        return users
+    
+    # Leer un usuario por id
+    def read_user(self, id_user: str):
+        self.init_connection_db()
+        cursor = self._connection_db_users.cursor()
+        cursor.execute('SELECT * FROM usuario WHERE id_usuario = ?', (id_user,))
+        user = cursor.fetchone()
+        self.close_connection_db()
+        return user
 
-            # Obtener la conexión a la base de datos
-            conn = self._connection_db_users
-            cursor = conn.cursor()
+    # Actualizar un usuario
+    def update_user(self, user: dict):
+        self.init_connection_db()
+        cursor = self._connection_db_users.cursor()
+        cursor.execute('''
+            UPDATE usuario SET
+                tipo_usuario = ?, nombre_usuario = ?, correo_usuario = ?, password = ?, area = ?,
+                marca_equipo = ?, modelo_equipo = ?, numero_serie_equipo = ?, modelo_cargador = ?,
+                windows_version = ?, RAM = ?, procesador = ?, disco_duro = ?, tipo_disco_duro = ?, tarjeta_video = ?
+            WHERE id_usuario = ?
+        ''', (
+            user['id_usuario'], user['tipo_usuario'], user['nombre_usuario'], user['correo_usuario'],
+            user['password'], user['area'], user['marca_equipo'], user['modelo_equipo'],
+            user['numero_serie_equipo'], user['modelo_cargador'], user['windows_version'],
+            user['RAM'], user['procesador'], user['disco_duro'], user['tipo_disco_duro'], user['tarjeta_video']
+        ))
+        self.close_connection_db()
 
-            # Ejecutar una consulta para buscar al usuario por correo
-            cursor.execute("SELECT password FROM users WHERE email = ?", (user['Correo'],))
-            result = cursor.fetchone()
-
-            # Cerrar la conexión a la base de datos
-            self.cerrar_bd(conn)
-
-            # Verificar si se encontró un usuario y si la contraseña es correcta
-            if result:
-                stored_password = result[0]
-                if stored_password == user['Contrasena']:
-                    print('Login exitoso para el usuario:', user['Correo'])
-                    return 'Login exitoso', 200
-                else:
-                    print('Contraseña incorrecta para el usuario:', user['Correo'])
-                    return 'Contraseña incorrecta', 401
-            else:
-                print('Correo no encontrado:', user['Correo'])
-                return 'Correono encontrado', 404
-
-        except Exception as e:
-            print('Error al intentar iniciar sesión:', e)
-            return 'Error al intentar iniciar sesión', 500
-
-    def username_login(self, username: str, password: str):
-        try:
-            # Crear un diccionario con los datos del usuario
-            user = {
-                'Username': username,
-                'Contrasena': password
-            }
-
-            # Obtener la conexión a la base de datos
-            conn = self._connection_db_users
-            cursor = conn.cursor()
-
-            # Ejecutar una consulta para buscar al usuario por nombre de usuario
-            cursor.execute("SELECT password FROM users WHERE username = ?", (user['Username'],))
-            result = cursor.fetchone()
-
-            # Cerrar la conexión a la base de datos
-            self.cerrar_bd(conn)
-
-            # Verificar si se encontró un usuario y si la contraseña es correcta
-            if result:
-                stored_password = result[0]
-                if stored_password == user['Contrasena']:
-                    print('Login exitoso para el usuario:', user['Username'])
-                    return 'Login exitoso', 200
-                else:
-                    print('Contraseña incorrecta para el usuario:', user['Username'])
-                    return 'Contraseña incorrecta', 401
-            else:
-                print('Usuario no encontrado:', user['Username'])
-                return 'Usuario no encontrado', 404
-
-        except Exception as e:
-            print('Error al intentar iniciar sesión:', e)
-            return 'Error al intentar iniciar sesión', 500
-
-
-
-'''
-class UserCrud(UserServices):
-    def __init__(self) -> None:
-        pass
-
-    def auth(self, username: str, password: str) -> bool:
-        if username == 'user' and password == '123':
-            print("LLEGO AL CRUD TRUE")
-            return True
-        else:
-            print("LLEGO AL CRUD FALSE")
-            return False
-        
-    def username_login(self, username, password) -> bool:
-        if username == 'username' and password == '123':
-            print("LLEGO AL CRUD TRUE")
-            return True
-        else:
-            print("LLEGO AL CRUD FALSE")
-            return False
-
-    def username_register(self, username, password, name, lastname) -> bool:
-        if username and password and name and lastname:
-            print("Recibido: Username:", username, "Password:", password, "Name:", name, "Lastname:", lastname)
-
-            if username == 'user' and password == '123' and name == 'Juan' and lastname == 'Martinez':
-                print("LLEGO AL CRUD TRUE")
-                return True
-            else:
-                print("LLEGO AL CRUD FALSE")
-                return False
-        else:
-            print("Alguno de los datos recibidos es nulo")
-            return False
-        
-        
-    def email_login(self, email, password, name, lastname) -> bool:
-        if email == 'correo@gmail.com' and password == '123':
-            print("LLEGO AL CRUD TRUE")
-            return True
-        else:
-            print("LLEGO AL CRUD FALSE")
-            return False
-        
-
-    def email_register(self, email, password, name, lastname) -> bool:
-        if email and password and name and lastname:
-            print("Recibido: Email:", email, "Password:", password, "Name:", name, "Lastname:", lastname)
-
-            if email == 'correo@gmail.com' and password == '123' and name == 'Juan' and lastname == 'Martinez':
-                print("LLEGO AL CRUD TRUE")
-                return True
-            else:
-                print("LLEGO AL CRUD FALSE")
-                return False
-        else:
-            print("Alguno de los datos recibidos es nulo")
-            return False
-'''
+    # Eliminar un usuario
+    def delete_user(self, id_user: str):
+        self.init_connection_db()
+        cursor = self._connection_db_users.cursor()
+        cursor.execute('DELETE FROM usuario WHERE id_usuario = ?', (id_user,))
+        self.close_connection_db()   

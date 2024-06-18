@@ -9,14 +9,18 @@ class UserServices(metaclass=abc.ABCMeta):
     def auth(self):
         pass
     @abc.abstractmethod
-    def username_login(self):
+    def create_user(self):
         pass
     @abc.abstractmethod
-    def username_register(self):
+    def read_users(self):
         pass
     @abc.abstractmethod
-    def email_login(self):
+    def read_user(self):
         pass
     @abc.abstractmethod
-    def email_register(self):
+    def update_user(self):
         pass
+    @abc.abstractmethod
+    def delete_user(self):
+        pass
+
