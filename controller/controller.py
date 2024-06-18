@@ -9,8 +9,8 @@ from app import app
 #from model.Wardrobe.wardrobeManager import add_outfit
 
 
-@app.route('/login_email', methods=['POST'])
-def login():
+@app.route('/login_user', methods=['POST'])
+def login_user():
     email = request.json['email']
     password = request.json['password']
     print("Recv data: " + str(email) + " : " + str(password))
