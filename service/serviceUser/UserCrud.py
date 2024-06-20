@@ -1,7 +1,5 @@
-import sqlite3 
-import json
-from flask import Flask, render_template, request, redirect, url_for, flash
-from .UserServices import UserServices
+from UserServices import UserServices
+import pymysql
 """
     In this script we are going to call
     the sql sentences for the db
@@ -10,14 +8,14 @@ from .UserServices import UserServices
 class UserCrud(UserServices):
     def __init__(self, db_name: str) -> None:
         self._db_name = db_name
-        self._connection_db_users = None
+        self._connection_db = None
     
     def init_connection_db(self) -> None:
-        self._connection_db_users = sqlite3.connect(self._db_name)
+        self._connection_db = pymysql.connect(host='localhost', port=3309, user='root', passwd='root', database=self._db_name, cursorclass=pymysql.cursors.DictCursor)
 
     def close_connection_db(self) -> None:
-        self._connection_db_users.commit()
-        self._connection_db_users.close()
+        self._connection_db.commit()
+        self._connection_db.close()
 
     def auth(self, username: str, password: str) -> bool:
         if username == 'user' and password == '123':
@@ -28,28 +26,38 @@ class UserCrud(UserServices):
     def create_user(self, user: dict):
         try:
             # Verificamos que el usuario si el usuario ya existe en la bd
-            
-            #conn = self._connection_db_users
             self.init_connection_db()
-            cursor = self._connection_db_users.cursor()
-            query_select = "SELECT * FROM usuario WHERE id_usuario = ?"
+            cursor = self._connection_db.cursor()
+            query_select = "SELECT * FROM usuario WHERE id_usuario = %s"
             cursor.execute(query_select, (user['id_usuario'],))
             existing_user = cursor.fetchone()
             # Si no existe el usuario, lo insertamos en la db, si no, no realiza la insercion
             if not existing_user:
-                query_insert = '''
+                query_insert = """
                     INSERT INTO usuario (
-                        id_usuario, tipo_usuario, nombre_usuario, correo_usuario, password, area,
-                        marca_equipo, modelo_equipo, numero_serie_equipo, modelo_cargador,
-                        windows_version, RAM, procesador, disco_duro, tipo_disco_duro, tarjeta_video
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                '''
+                        id_usuario, 
+                        nombre_usuario, 
+                        apellido_paterno, 
+                        apellido_materno, 
+                        correo_usuario, 
+                        password_usuario,
+                        rol_usuario, 
+                        id_area, 
+                        id_equipo
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+                """
                 cursor.execute(query_insert, (
-                    user['id_usuario'], user['tipo_usuario'], user['nombre_usuario'], user['correo_usuario'],
-                    user['password'], user['area'], user['marca_equipo'], user['modelo_equipo'],
-                    user['numero_serie_equipo'], user['modelo_cargador'], user['windows_version'],
-                    user['RAM'], user['procesador'], user['disco_duro'], user['tipo_disco_duro'], user['tarjeta_video']
+                    user['id_usuario'], 
+                    user['nombre_usuario'],
+                    user['apellido_paterno'],
+                    user['apellido_materno'], 
+                    user['correo_usuario'],
+                    user['password_usuario'],
+                    user['rol_usuario'],
+                    user['id_area'],
+                    user['id_equipo']
                 ))
+                cursor.close()
                 self.close_connection_db()
                 print('Usuario insertado', user)
                 return 'Usuario insertado', 200
@@ -58,48 +66,62 @@ class UserCrud(UserServices):
                 print("El usuario ya existe en la base de datos. No se ha realizado la inserción.")
                 return 'El usuario ya existe en la base de datos. No se ha realizado la inserción.', 400
         except Exception as e:
+            self.close_connection_db()   
             print('Error al insertar usuario', e)
             return 'Error al insertar usuario', 500
-
-    # Leer todos los usuarios 
+       
     def read_users(self):
-        self.init_connection_db()
-        cursor = self._connection_db_users.cursor()
-        cursor.execute('SELECT * FROM usuario')
-        users = cursor.fetchall()
-        self.close_connection_db()
-        return users
-    
-    # Leer un usuario por id
-    def read_user(self, id_user: str):
-        self.init_connection_db()
-        cursor = self._connection_db_users.cursor()
-        cursor.execute('SELECT * FROM usuario WHERE id_usuario = ?', (id_user,))
-        user = cursor.fetchone()
-        self.close_connection_db()
-        return user
+        try:
+            self.init_connection_db()
+            cursor = self._connection_db.cursor()
+            cursor.execute('SELECT * FROM usuario;')
+            users = cursor.fetchall()
+            cursor.close()
+            self.close_connection_db()
+            return 200, users
+        except Exception as e:
+            self.close_connection_db()
+            return 500, str(e)
+        
+    def read_user(self, user_name: str):
+        try:
+            self.init_connection_db()
+            cursor = self._connection_db.cursor()
+            query_select = "SELECT * FROM usuario WHERE nombre_usuario = %s"
+            cursor.execute(query_select, (user_name,))
+            is_delete = cursor.fetchone()
+            cursor.close()
+            self.close_connection_db()
+            return 200, is_delete
+        except Exception as e:
+            self.close_connection_db()
+            return 500, str(e)
 
-    # Actualizar un usuario
-    def update_user(self, user: dict):
-        self.init_connection_db()
-        cursor = self._connection_db_users.cursor()
-        cursor.execute('''
-            UPDATE usuario SET
-                tipo_usuario = ?, nombre_usuario = ?, correo_usuario = ?, password = ?, area = ?,
-                marca_equipo = ?, modelo_equipo = ?, numero_serie_equipo = ?, modelo_cargador = ?,
-                windows_version = ?, RAM = ?, procesador = ?, disco_duro = ?, tipo_disco_duro = ?, tarjeta_video = ?
-            WHERE id_usuario = ?
-        ''', (
-            user['id_usuario'], user['tipo_usuario'], user['nombre_usuario'], user['correo_usuario'],
-            user['password'], user['area'], user['marca_equipo'], user['modelo_equipo'],
-            user['numero_serie_equipo'], user['modelo_cargador'], user['windows_version'],
-            user['RAM'], user['procesador'], user['disco_duro'], user['tipo_disco_duro'], user['tarjeta_video']
-        ))
-        self.close_connection_db()
+    def update_user_name(self, user: dict):
+        try:
+            self.init_connection_db()
+            cursor = self._connection_db.cursor()
+            query_update = "UPDATE usuario SET nombre_usuario = %s WHERE id_usuario = %s;"
+            cursor.execute(query_update, (
+                user['nombre_usuario'], 
+                user['id_usuario']
+            ))
+            cursor.close()
+            self.close_connection_db()
+            return 200, "Usuario actualizado exitosamente"
+        except Exception as e:
+            self.close_connection_db()   
+            return 500, str(e)
 
-    # Eliminar un usuario
+
     def delete_user(self, id_user: str):
-        self.init_connection_db()
-        cursor = self._connection_db_users.cursor()
-        cursor.execute('DELETE FROM usuario WHERE id_usuario = ?', (id_user,))
-        self.close_connection_db()   
+        try:
+            self.init_connection_db()
+            cursor = self._connection_db.cursor()
+            query_delete = "DELETE FROM usuario WHERE id_usuario = %s;"
+            user = cursor.execute(query_delete, (id_user,))
+            self.close_connection_db()
+            return 200, user
+        except Exception as e:
+            self.close_connection_db()   
+            return 500, str(e)
