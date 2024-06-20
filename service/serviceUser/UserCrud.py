@@ -1,4 +1,4 @@
-from UserServices import UserServices
+from .UserServices import UserServices
 import pymysql
 """
     In this script we are going to call
