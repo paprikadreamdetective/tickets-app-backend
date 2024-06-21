@@ -9,6 +9,9 @@ class UserServices(metaclass=abc.ABCMeta):
     def auth(self):
         pass
     @abc.abstractmethod
+    def auth_user(self):
+        pass
+    @abc.abstractmethod
     def create_user(self):
         pass
     @abc.abstractmethod

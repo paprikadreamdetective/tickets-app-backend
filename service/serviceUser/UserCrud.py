@@ -1,5 +1,7 @@
 from .UserServices import UserServices
+
 import pymysql
+import bcrypt
 """
     In this script we are going to call
     the sql sentences for the db
@@ -9,7 +11,7 @@ class UserCrud(UserServices):
     def __init__(self, db_name: str) -> None:
         self._db_name = db_name
         self._connection_db = None
-    
+
     def init_connection_db(self) -> None:
         self._connection_db = pymysql.connect(host='localhost', port=3309, user='root', passwd='root', database=self._db_name, cursorclass=pymysql.cursors.DictCursor)
 
@@ -17,12 +19,33 @@ class UserCrud(UserServices):
         self._connection_db.commit()
         self._connection_db.close()
 
+    def hash_password(self, password: str) -> bytes:
+        salt = bcrypt.gensalt()
+        hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+        return hashed
+    
+    def check_password(self, hashed_password, user_password) -> bool:
+        return bcrypt.checkpw(user_password.encode('utf-8'), hashed_password)
+
     def auth(self, username: str, password: str) -> bool:
         if username == 'user' and password == '123':
             return True
         else:
             return False
         
+    def auth_user(self, email: str, password_input: str):
+        try:
+            self.init_connection_db()
+            cursor = self._connection_db.cursor()
+            cursor.execute("SELECT password_usuario FROM usuario WHERE correo_usuario = %s ;", (email,))
+            passwd = cursor.fetchone()
+            print(passwd)
+            self.close_connection_db()
+            return self.check_password(passwd['password_usuario'], password_input)
+        except Exception as e:
+            self.close_connection_db()
+            return 500, str(e)
+
     def create_user(self, user: dict):
         try:
             # Verificamos que el usuario si el usuario ya existe en la bd
@@ -52,7 +75,7 @@ class UserCrud(UserServices):
                     user['apellido_paterno'],
                     user['apellido_materno'], 
                     user['correo_usuario'],
-                    user['password_usuario'],
+                    self.hash_password(user['password_usuario']),
                     user['rol_usuario'],
                     user['id_area'],
                     user['id_equipo']
@@ -112,7 +135,6 @@ class UserCrud(UserServices):
         except Exception as e:
             self.close_connection_db()   
             return 500, str(e)
-
 
     def delete_user(self, id_user: str):
         try:

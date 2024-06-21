@@ -12,6 +12,9 @@ class ProxyUser(UserServices):
     def auth(self, username, password):
         return self._real_subject.auth(username, password)
     
+    def auth_user(self, username, password):
+        return self._real_subject.auth_user(username, password)
+    
     def create_user(self, user):
         return self._real_subject.create_user(user)
 
