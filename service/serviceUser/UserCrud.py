@@ -13,7 +13,7 @@ class UserCrud(UserServices):
         self._connection_db = None
 
     def init_connection_db(self) -> None:
-        self._connection_db = pymysql.connect(host='localhost', port=3309, user='root', passwd='root', database=self._db_name, cursorclass=pymysql.cursors.DictCursor)
+        self._connection_db = pymysql.connect(host='localhost', port=3309, user='root', passwd='', database=self._db_name, cursorclass=pymysql.cursors.DictCursor)
 
     def close_connection_db(self) -> None:
         self._connection_db.commit()
@@ -37,14 +37,15 @@ class UserCrud(UserServices):
         try:
             self.init_connection_db()
             cursor = self._connection_db.cursor()
-            cursor.execute("SELECT password_usuario FROM usuario WHERE correo_usuario = %s ;", (email,))
-            passwd = cursor.fetchone()
-            print(passwd)
+            cursor.execute("SELECT id_usuario, correo_usuario, password_usuario, rol_usuario FROM usuario WHERE correo_usuario = %s ;", (email,))
+            
+            user = cursor.fetchone()
+            print(user)
             self.close_connection_db()
-            return self.check_password(passwd['password_usuario'], password_input)
+            return (True, 200, {'id' : user['id_usuario'], 'email' : user['correo_usuario'], 'role' : user['rol_usuario']}) if self.check_password(user['password_usuario'], password_input) else (False, 500)
         except Exception as e:
             self.close_connection_db()
-            return 500, str(e)
+            return str(e), 500 
 
     def create_user(self, user: dict):
         try:

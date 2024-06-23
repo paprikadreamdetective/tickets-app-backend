@@ -9,7 +9,7 @@ def auth_user(email: str, password: str):
 def register_user(user: dict):
     return AuthAdapter(ProxyUser(UserCrud('databasetickets'))).register(user)
 
-
+'''
 if __name__ == '__main__':
     usuario = {
         'id_usuario': 'MAD-CDM-100-002',
@@ -30,3 +30,4 @@ if __name__ == '__main__':
         print("Autorizado")
     else:
         print("No autorizado")
+'''

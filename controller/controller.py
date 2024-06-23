@@ -1,23 +1,38 @@
-import os
-from flask import request, jsonify
-from app import app
-#from model.authenticate.authManager import user_auth_email, user_register_email, user_auth_username,user_register_username
-#from model.generateOutfit.generateOutfit import GenerateOutfit, parse_outfit_string
-#from model.CaptureClothe.imageManager import sendPictureToPI
-#from model.Weather.weatherManager import getCurrentWeather
-#from model.CreateOutfit.gestorConjunto import create_outfit
-#from model.Wardrobe.wardrobeManager import add_outfit
+from model.Authenticate.authManager import auth_user
 
+import os
+from flask import request, jsonify, session
+
+from app import app
+
+
+@app.route("/@me")
+def get_current_session():
+    user_id = session.get("user_id")
+    print(user_id)
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    #user = User.query.filter_by(id=user_id).first()
+    return jsonify({
+        "id": user_id,
+        "email": 'bob@example.com'
+    }) 
 
 @app.route('/login_user', methods=['POST'])
 def login_user():
-    email = request.json['email']
-    password = request.json['password']
-    print("Recv data: " + str(email) + " : " + str(password))
-    result, status_code = user_auth_email(email, password)
-    if status_code == 200:
+    result, status_code, user = auth_user(request.json['email'], request.json['password'])
+    print(result, status_code)
+    print(user)    
+    if result and status_code == 200:
         print("Datos correctos")
-        return jsonify({'success': 200, 'message': result}), status_code
+        session["user_id"] = user['id']
+        
+        return jsonify({'success': result, 'message': 'Datos Correctos'})
     else:
         print("Datos incorrectos")
-        return jsonify({'success': status_code, 'message': result}), status_code
+        return jsonify({'success': result, 'message': 'Datos Incorrectos'})
+    
+@app.route("/logout", methods=["POST"])
+def logout_user():
+    session.pop("name")
+    return "200"
