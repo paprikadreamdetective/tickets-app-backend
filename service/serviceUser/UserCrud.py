@@ -97,7 +97,17 @@ class UserCrud(UserServices):
         try:
             self.init_connection_db()
             cursor = self._connection_db.cursor()
-            cursor.execute('SELECT nombre_usuario, correo_usuario FROM usuario;')
+            query_select = """
+                SELECT 
+                usuario.id_usuario,
+                usuario.nombre_usuario,
+                usuario.apellido_paterno,
+                usuario.apellido_materno,
+                usuario.correo_usuario,
+                area.nombre_area
+                FROM usuario JOIN area ON usuario.id_area = area.id_area;
+            """
+            cursor.execute(query_select)
             users = cursor.fetchall()
             cursor.close()
             self.close_connection_db()
