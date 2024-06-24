@@ -107,18 +107,48 @@ class UserCrud(UserServices):
             self.close_connection_db()
             return 500, str(e)
         
-    def read_user(self, user_name: str):
+    def read_user(self, name_user: str):
         try:
             self.init_connection_db()
             cursor = self._connection_db.cursor()
             query_select = "SELECT * FROM usuario WHERE nombre_usuario = %s"
-            cursor.execute(query_select, (user_name,))
-            is_delete = cursor.fetchone()
+            cursor.execute(query_select, (name_user,))
+            user = cursor.fetchone()
             cursor.close()
             self.close_connection_db()
-            return 200, is_delete
+            return 200, user
         except Exception as e:
             self.close_connection_db()
+            return 500, str(e)
+
+    def update_user(self, user: dict):
+        try:
+            self.init_connection_db()
+            cursor = self._connection_db.cursor()
+            query_update = """
+                UPDATE usuario SET 
+                    nombre_usuario = %s,
+                    apellido_paterno = %s,
+                    apellido_materno = %s,
+                    correo_usuario = %s,
+                    password_usuario = %s,
+                    id_area = %s
+                WHERE id_usuario = %s;
+            """
+            cursor.execute(query_update, (
+                user['nombre_usuario'],
+                user['apellido_paterno'],
+                user['apellido_materno'],
+                user['correo_usuario'],
+                self.hash_password(user['password_usuario']),
+                user['id_area'],
+                user['id_usuario']
+            ))
+            cursor.close()
+            self.close_connection_db()
+            return 200, "Usuario actualizado exitosamente"
+        except Exception as e:
+            self.close_connection_db()   
             return 500, str(e)
 
     def update_user_name(self, user: dict):

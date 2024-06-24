@@ -21,9 +21,12 @@ class ProxyUser(UserServices):
     def read_users(self):
         return self._real_subject.read_users()
     
-    def read_user(self, id_user: str):
-        return self._real_subject.read_user(id_user)
+    def read_user(self, name_user: str):
+        return self._real_subject.read_user(name_user)
     
+    def update_user(self):
+        return super().update_user()
+
     def update_user_name(self, update_user):
         return self._real_subject.update_user_name(update_user)
     
