@@ -1,6 +1,7 @@
 from model.Authenticate.authManager import auth_user
+from model.UserManager.userManager import get_all_users
 
-import os
+
 from flask import request, jsonify, session
 
 from app import app
@@ -36,3 +37,12 @@ def login_user():
 def logout_user():
     session.pop("name")
     return "200"
+
+@app.route("/get_users", methods=["GET"])
+def get_users():
+    status_code, users = get_all_users()
+    
+    print(users)
+    if not users:
+        return jsonify({"error": "No hay usuarios"}), 401
+    return jsonify(users)

@@ -5,7 +5,6 @@ import bcrypt
 """
     In this script we are going to call
     the sql sentences for the db
-
 """
 class UserCrud(UserServices):
     def __init__(self, db_name: str) -> None:
@@ -13,7 +12,7 @@ class UserCrud(UserServices):
         self._connection_db = None
 
     def init_connection_db(self) -> None:
-        self._connection_db = pymysql.connect(host='localhost', port=3309, user='root', passwd='', database=self._db_name, cursorclass=pymysql.cursors.DictCursor)
+        self._connection_db = pymysql.connect(host='localhost', port=3306, user='root', passwd='', database=self._db_name, cursorclass=pymysql.cursors.DictCursor)
 
     def close_connection_db(self) -> None:
         self._connection_db.commit()
@@ -98,7 +97,7 @@ class UserCrud(UserServices):
         try:
             self.init_connection_db()
             cursor = self._connection_db.cursor()
-            cursor.execute('SELECT * FROM usuario;')
+            cursor.execute('SELECT nombre_usuario, correo_usuario FROM usuario;')
             users = cursor.fetchall()
             cursor.close()
             self.close_connection_db()

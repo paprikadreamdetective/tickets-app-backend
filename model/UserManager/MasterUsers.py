@@ -17,5 +17,5 @@ class MasterUsersManager:
     def update_user(self, user: dict):
         return SlaveUpdateUser(self._proxy).update(user)
     
-    def get_all_users(self, user: dict):
+    def get_all_users(self):
         return SlaveGetAllUsers(self._proxy).get()
