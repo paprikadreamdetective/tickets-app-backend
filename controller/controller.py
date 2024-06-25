@@ -1,6 +1,5 @@
-from model.Authenticate.authManager import auth_user
-from model.Authenticate.authManager import register_user
-from model.UserManager.userManager import get_all_users
+from model.Authenticate.authManager import auth_user, register_user
+from model.UserManager.userManager import get_all_users, delete_user
 from app import app
 
 from flask import request, jsonify, session
@@ -60,3 +59,7 @@ def add_user():
         'id_equipo' : 1
     }
     return register_user(new_user)
+
+@app.route('/remove_user', methods=['POST'])
+def remove_user():
+    return delete_user(request.json['id_susario'])
