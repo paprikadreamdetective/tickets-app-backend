@@ -12,7 +12,7 @@ class UserCrud(UserServices):
         self._connection_db = None
 
     def init_connection_db(self) -> None:
-        self._connection_db = pymysql.connect(host='localhost', port=3306, user='root', passwd='', database=self._db_name, cursorclass=pymysql.cursors.DictCursor)
+        self._connection_db = pymysql.connect(host='localhost', port=3309, user='root', passwd='', database=self._db_name, cursorclass=pymysql.cursors.DictCursor)
 
     def close_connection_db(self) -> None:
         self._connection_db.commit()
