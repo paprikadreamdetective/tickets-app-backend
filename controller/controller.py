@@ -1,5 +1,10 @@
 from model.Authenticate.authManager import auth_user, register_user
 from model.UserManager.userManager import get_all_users, delete_user
+
+from service.serviceUser.ProxyUser import ProxyUser
+from service.serviceUser.UserCrud import UserCrud
+
+
 from app import app
 
 from flask import request, jsonify, session
@@ -81,7 +86,7 @@ def change_profile_pic():
     if file:
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        
+
         # Guardar la información en la base de datos
         # new_image = Image(filename=filename)
         # db.session.add(new_image)

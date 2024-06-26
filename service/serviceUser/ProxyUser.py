@@ -30,5 +30,8 @@ class ProxyUser(UserServices):
     def update_user_name(self, update_user):
         return self._real_subject.update_user_name(update_user)
     
+    def update_profile_pic(self, id_user, profile_pic):
+        return self._real_subject.update_profile_pic(id_user, profile_pic)
+    
     def delete_user(self, id_user: str):
         return self._real_subject.delete_user(id_user)
