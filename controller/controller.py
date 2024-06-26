@@ -60,6 +60,10 @@ def add_user():
     }
     return register_user(new_user)
 
-@app.route('/remove_user', methods=['POST'])
-def remove_user():
-    return delete_user(request.json['id_susario'])
+@app.route('/remove_user/<string:id>', methods=['POST'])
+def remove_user(id):
+    status_code, result = delete_user(id)
+    print("Valores: ", status_code, result)
+    if not result:
+        return jsonify({'message': 'Usuario no encontrado'}), status_code
+    return jsonify({'message': 'Usuario eliminado exitosamente'}), status_code
