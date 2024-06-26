@@ -36,12 +36,12 @@ class UserCrud(UserServices):
         try:
             self.init_connection_db()
             cursor = self._connection_db.cursor()
-            cursor.execute("SELECT id_usuario, nombre_usuario, apellido_paterno, apellido_materno, correo_usuario, password_usuario, rol_usuario FROM usuario WHERE correo_usuario = %s ;", (email,))
+            cursor.execute("SELECT id_usuario, nombre_usuario, apellido_paterno, apellido_materno, correo_usuario, password_usuario, rol_usuario, foto_perfil FROM usuario WHERE correo_usuario = %s ;", (email,))
             
             user = cursor.fetchone()
             print(user)
             self.close_connection_db()
-            return (True, 200, {'id' : user['id_usuario'], 'name' : user['nombre_usuario'] + ' ' + user['apellido_paterno'] + ' ' + user['apellido_materno'] , 'email' : user['correo_usuario'], 'role' : user['rol_usuario']}) if self.check_password(user['password_usuario'], password_input) else (False, 500)
+            return (True, 200, {'id' : user['id_usuario'], 'name' : user['nombre_usuario'] + ' ' + user['apellido_paterno'] + ' ' + user['apellido_materno'] , 'email' : user['correo_usuario'], 'role' : user['rol_usuario'], 'profile_pic' : user['foto_perfil']}) if self.check_password(user['password_usuario'], password_input) else (False, 500)
         except Exception as e:
             self.close_connection_db()
             return str(e), 500 

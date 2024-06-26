@@ -75,21 +75,13 @@ def remove_user(id):
 
 @app.route('/change_profile_pic', methods=['post'])
 def change_profile_pic():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-    
-    file = request.files['file']
-    
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
+    try:
+        id_user = request.json['id']
+        profile_pic = request.files['file'].read()
+        result, status_code = ProxyUser(UserCrud('databasetickets')).update_profile_pic(id_user, profile_pic)
+        print(result, status_code)
+        return jsonify({"message": "Imagen subida correctamente."})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    if file:
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-        # Guardar la información en la base de datos
-        # new_image = Image(filename=filename)
-        # db.session.add(new_image)
-        # db.session.commit()
-
-        return jsonify({'message': 'Image uploaded successfully', 'filename': filename}), 200
