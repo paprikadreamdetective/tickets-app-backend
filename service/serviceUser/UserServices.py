@@ -27,6 +27,9 @@ class UserServices(metaclass=abc.ABCMeta):
     def update_user_name(self):
         pass
     @abc.abstractmethod
+    def update_profile_pic(self):
+        pass
+    @abc.abstractmethod
     def delete_user(self):
         pass
 

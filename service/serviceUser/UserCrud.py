@@ -12,7 +12,7 @@ class UserCrud(UserServices):
         self._connection_db = None
 
     def init_connection_db(self) -> None:
-        self._connection_db = pymysql.connect(host='localhost', port=3309, user='root', passwd='', database=self._db_name, cursorclass=pymysql.cursors.DictCursor)
+        self._connection_db = pymysql.connect(host='localhost', port=3306, user='root', passwd='', database=self._db_name, cursorclass=pymysql.cursors.DictCursor)
 
     def close_connection_db(self) -> None:
         self._connection_db.commit()
@@ -36,12 +36,12 @@ class UserCrud(UserServices):
         try:
             self.init_connection_db()
             cursor = self._connection_db.cursor()
-            cursor.execute("SELECT id_usuario, correo_usuario, password_usuario, rol_usuario FROM usuario WHERE correo_usuario = %s ;", (email,))
+            cursor.execute("SELECT id_usuario, nombre_usuario, apellido_paterno, apellido_materno, correo_usuario, password_usuario, rol_usuario FROM usuario WHERE correo_usuario = %s ;", (email,))
             
             user = cursor.fetchone()
             print(user)
             self.close_connection_db()
-            return (True, 200, {'id' : user['id_usuario'], 'email' : user['correo_usuario'], 'role' : user['rol_usuario']}) if self.check_password(user['password_usuario'], password_input) else (False, 500)
+            return (True, 200, {'id' : user['id_usuario'], 'name' : user['nombre_usuario'] + ' ' + user['apellido_paterno'] + ' ' + user['apellido_materno'] , 'email' : user['correo_usuario'], 'role' : user['rol_usuario']}) if self.check_password(user['password_usuario'], password_input) else (False, 500)
         except Exception as e:
             self.close_connection_db()
             return str(e), 500 
@@ -175,6 +175,29 @@ class UserCrud(UserServices):
         except Exception as e:
             self.close_connection_db()   
             return 500, str(e)
+        
+    def update_profile_pic(self, id_user: str, profile_pic):
+        try:
+            self.init_connection_db()
+            cursor = self._connection_db.cursor()
+            query_select = "SELECT * FROM usuario WHERE id_usuario = %s"
+            cursor.execute(query_select, (id_user,))
+            existing_user = cursor.fetchone()
+            if existing_user:
+                query_insert = "INSERT INTO usuario ( foto_perfil ) VALUES ( %s );"
+                cursor.execute(query_insert, (profile_pic,))
+                cursor.close()
+                self.close_connection_db()
+                print('Foto de perfil actualizada')
+                return 'Foto de perfil actualizada', 200
+            else:
+                self.close_connection_db()
+                print("Usuario no encontrado")
+                return 'Usuario no encontrado', 400
+        except Exception as e:
+            self.close_connection_db()   
+            print('Error al cambiar foto de perfil', e)
+            return 'Error al cambiar foto de perfil', 500
 
     def delete_user(self, id_user: str):
         try:

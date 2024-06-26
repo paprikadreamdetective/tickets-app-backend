@@ -3,8 +3,8 @@ from model.UserManager.userManager import get_all_users, delete_user
 from app import app
 
 from flask import request, jsonify, session
-
-
+from werkzeug.utils import secure_filename
+import os
 
 @app.route("/@me")
 def get_current_session():
@@ -27,7 +27,7 @@ def login_user():
         print("Datos correctos")
         session["user_id"] = user['id']
         
-        return jsonify({'success': result, 'message': 'Datos Correctos'})
+        return jsonify({'success': result, 'message': 'Datos Correctos', 'user' : user})
     else:
         print("Datos incorrectos")
         return jsonify({'success': result, 'message': 'Datos Incorrectos'})
@@ -67,3 +67,24 @@ def remove_user(id):
     if not result:
         return jsonify({'message': 'Usuario no encontrado'}), status_code
     return jsonify({'message': 'Usuario eliminado exitosamente'}), status_code
+
+@app.route('/change_profile_pic', methods=['post'])
+def change_profile_pic():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    
+    file = request.files['file']
+    
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    if file:
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        
+        # Guardar la información en la base de datos
+        # new_image = Image(filename=filename)
+        # db.session.add(new_image)
+        # db.session.commit()
+
+        return jsonify({'message': 'Image uploaded successfully', 'filename': filename}), 200
