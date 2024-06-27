@@ -4,12 +4,15 @@ from model.UserManager.userManager import get_all_users, delete_user
 from service.serviceUser.ProxyUser import ProxyUser
 from service.serviceUser.UserCrud import UserCrud
 
+from service.serviceTicket.ProxyTicket import ProxyTicket
+from service.serviceTicket.TicketCrud import TicketCrud
 
 from app import app
 
 from flask import request, jsonify, session
 from werkzeug.utils import secure_filename
 import os
+
 
 @app.route("/@me")
 def get_current_session():
@@ -26,8 +29,8 @@ def get_current_session():
 @app.route('/login_user', methods=['POST'])
 def login_user():
     result, status_code, user = auth_user(request.json['email'], request.json['password'])
-    print(result, status_code)
-    print(user)    
+    print(result, status_code, user)
+   
     if result and status_code == 200:
         print("Datos correctos")
         session["user_id"] = user['id']
@@ -73,15 +76,22 @@ def remove_user(id):
         return jsonify({'message': 'Usuario no encontrado'}), status_code
     return jsonify({'message': 'Usuario eliminado exitosamente'}), status_code
 
-@app.route('/change_profile_pic', methods=['post'])
+@app.route('/change_profile_pic', methods=['POST'])
 def change_profile_pic():
     try:
-        id_user = request.json['id']
+        id_user = request.form['id']
         profile_pic = request.files['file'].read()
+        
         result, status_code = ProxyUser(UserCrud('databasetickets')).update_profile_pic(id_user, profile_pic)
         print(result, status_code)
         return jsonify({"message": "Imagen subida correctamente."})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
+@app.route('/get_tickets', methods=['GET'])
+def get_tickets():
+    status_code, tickets = ProxyTicket(TicketCrud('databasetickets')).get_tickets()
+    print(tickets)
+    if not tickets:
+        return jsonify({"error": "No hay tickets"}), 401
+    return jsonify(tickets)

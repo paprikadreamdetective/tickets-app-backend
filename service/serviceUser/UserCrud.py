@@ -2,6 +2,9 @@ from .UserServices import UserServices
 
 import pymysql
 import bcrypt
+import base64
+from PIL import Image
+import io 
 """
     In this script we are going to call
     the sql sentences for the db
@@ -12,7 +15,7 @@ class UserCrud(UserServices):
         self._connection_db = None
 
     def init_connection_db(self) -> None:
-        self._connection_db = pymysql.connect(host='localhost', port=3306, user='root', passwd='', database=self._db_name, cursorclass=pymysql.cursors.DictCursor)
+        self._connection_db = pymysql.connect(host='localhost', port=3309, user='root', passwd='', database=self._db_name, cursorclass=pymysql.cursors.DictCursor)
 
     def close_connection_db(self) -> None:
         self._connection_db.commit()
@@ -41,7 +44,7 @@ class UserCrud(UserServices):
             user = cursor.fetchone()
             print(user)
             self.close_connection_db()
-            return (True, 200, {'id' : user['id_usuario'], 'name' : user['nombre_usuario'] + ' ' + user['apellido_paterno'] + ' ' + user['apellido_materno'] , 'email' : user['correo_usuario'], 'role' : user['rol_usuario'], 'profile_pic' : user['foto_perfil']}) if self.check_password(user['password_usuario'], password_input) else (False, 500)
+            return (True, 200, {'id' : user['id_usuario'], 'name' : user['nombre_usuario'] + ' ' + user['apellido_paterno'] + ' ' + user['apellido_materno'] , 'email' : user['correo_usuario'], 'role' : user['rol_usuario'], 'profile_pic' : base64.b64encode(user['foto_perfil']).decode('utf-8') if user['foto_perfil'] != None else None }) if self.check_password(user['password_usuario'], password_input) else (False, 500, "contrasena incorrecta")
         except Exception as e:
             self.close_connection_db()
             return str(e), 500 
@@ -183,9 +186,12 @@ class UserCrud(UserServices):
             query_select = "SELECT * FROM usuario WHERE id_usuario = %s"
             cursor.execute(query_select, (id_user,))
             existing_user = cursor.fetchone()
+            print(existing_user)
             if existing_user:
-                query_insert = "INSERT INTO usuario ( foto_perfil ) VALUES ( %s );"
-                cursor.execute(query_insert, (profile_pic,))
+                
+                #print(pic)
+                query_insert = "UPDATE usuario SET foto_perfil = %s WHERE id_usuario = %s;"
+                cursor.execute(query_insert, (profile_pic, id_user))
                 cursor.close()
                 self.close_connection_db()
                 print('Foto de perfil actualizada')
