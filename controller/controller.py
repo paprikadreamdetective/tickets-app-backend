@@ -12,6 +12,8 @@ from app import app
 from flask import request, jsonify, session
 from werkzeug.utils import secure_filename
 import os
+import datetime
+import base64
 
 
 @app.route("/@me")
@@ -87,7 +89,17 @@ def change_profile_pic():
         return jsonify({"message": "Imagen subida correctamente."})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+    
+@app.route('/get_profile_pic/<string:id>', methods=['POST','GET'])
+def get_profile_pic(id):
+    
+    status_code, user = ProxyUser(UserCrud('databasetickets')).read_profile_pic(id)
+    print(status_code, user['id'])
+    if status_code == 200:
+        return jsonify({'status_code' : 200, 'message': 'Datos Correctos', 'user' : user })
+    return jsonify({'status_code' : 500, 'message' : 'error al obtener la imagen', 'user' : None})
+        
+#base64.b64encode(pic).decode('utf-8') if pic != None else None
 @app.route('/get_tickets', methods=['GET'])
 def get_tickets():
     status_code, tickets = ProxyTicket(TicketCrud('databasetickets')).get_tickets()
@@ -95,3 +107,27 @@ def get_tickets():
     if not tickets:
         return jsonify({"error": "No hay tickets"}), 401
     return jsonify(tickets)
+
+@app.route('/add_ticket', methods=['POST'])
+def add_ticket():
+    print(request.json)
+    year, month, day = map(int, request.json['fecha_creacion'].split('-'))
+    print(year, month, day)
+    new_ticket = {
+        'asunto_ticket' : request.json['asunto_ticket'], 
+        'descripcion_ticket' : request.json['descripcion_ticket'],
+        'fecha_creacion_ticket' : request.json['fecha_creacion'],
+        'categoria_ticket' : request.json['categoria_ticket'], 
+        'id_usuario' : request.json['id_usuario'],
+        'id_estado' : request.json['id_estado']
+    }
+    return ProxyTicket(TicketCrud('databasetickets')).create_ticket(new_ticket)
+
+@app.route('/remove_ticket/<int:id>', methods=['POST'])
+def remove_ticket(id):
+    status_code, result = ProxyTicket(TicketCrud('databasetickets')).delete_ticket(id)
+    print(status_code, result)
+    if not result:
+        return jsonify({'message': 'Ticket no encontrado'}), status_code
+    return jsonify({'message': 'Ticket eliminado exitosamente'}), status_code
+

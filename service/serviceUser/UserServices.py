@@ -21,6 +21,9 @@ class UserServices(metaclass=abc.ABCMeta):
     def read_user(self):
         pass
     @abc.abstractmethod
+    def read_profile_pic(self):
+        pass
+    @abc.abstractmethod
     def update_user(self):
         pass
     @abc.abstractmethod

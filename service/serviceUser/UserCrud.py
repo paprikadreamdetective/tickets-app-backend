@@ -107,6 +107,7 @@ class UserCrud(UserServices):
                 usuario.apellido_paterno,
                 usuario.apellido_materno,
                 usuario.correo_usuario,
+                usuario.foto_perfil,
                 area.nombre_area
                 FROM usuario JOIN area ON usuario.id_area = area.id_area;
             """
@@ -128,10 +129,27 @@ class UserCrud(UserServices):
             user = cursor.fetchone()
             cursor.close()
             self.close_connection_db()
-            return 200, user
+            return 200, {'id'}
         except Exception as e:
             self.close_connection_db()
             return 500, str(e)
+        
+    def read_profile_pic(self, id_user: str):
+        try:
+            self.init_connection_db()
+
+            cursor = self._connection_db.cursor()
+            query_select = "SELECT id_usuario, foto_perfil FROM usuario WHERE id_usuario = %s;"
+            cursor.execute(query_select, (id_user,))
+            user = cursor.fetchone()
+            print(user['id_usuario'])
+            cursor.close()
+            self.close_connection_db()
+            return 200, { 'id' : user['id_usuario'], 'profile_pic' : base64.b64encode(user['foto_perfil']).decode('utf-8') }
+        except Exception as e:
+            self.close_connection_db()
+            print("Hay error!")
+            return 500, "Error al obtener imagen"
 
     def update_user(self, user: dict):
         try:

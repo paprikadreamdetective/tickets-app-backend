@@ -1,18 +1,19 @@
-from TicketServices import TicketServices
+from .TicketServices import TicketServices
 
 import pymysql
-
+import datetime
 class TicketCrud(TicketServices):
     def __init__(self, db_name: str) -> None:
         self._db_name = db_name
         self._connection_db = None
     
     def init_connection_db(self) -> None:
-        self._connection_db = pymysql.connect(host='localhost', port=3306, user='root', passwd='', database=self._db_name, cursorclass=pymysql.cursors.DictCursor)
+        self._connection_db = pymysql.connect(host='localhost', port=3309, user='root', passwd='', database=self._db_name, cursorclass=pymysql.cursors.DictCursor)
 
     def close_connection_db(self) -> None:
         self._connection_db.commit()
         self._connection_db.close()
+
 
     def create_ticket(self, ticket: dict):
         try:
@@ -24,23 +25,22 @@ class TicketCrud(TicketServices):
                         descripcion_ticket,
                         fecha_creacion_ticket, 
                         categoria_ticket, 
-                        captura_pantalla_ticket,
                         id_usuario, 
                         id_estado
-                        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        ) VALUES (%s, %s, %s, %s, %s, %s)
                 """
             cursor.execute(query_insert, (
                     ticket['asunto_ticket'],
                     ticket['descripcion_ticket'],
                     ticket['fecha_creacion_ticket'],
                     ticket['categoria_ticket'],
-                    ticket['captura_pantalla_ticket'],
                     ticket['id_usuario'],
-                    ticket['id_estado']
+                    int(ticket['id_estado'])
                 ))
             cursor.close()
             self.close_connection_db()
-            print('Ticket generado', ticket)
+            print('Ticket generado', 200)
+            return 'Ticket generado', 200
         except Exception as e:
             self.close_connection_db()   
             print('Error al crear ticket', e)
@@ -97,7 +97,7 @@ class TicketCrud(TicketServices):
             query_delete = "DELETE FROM ticket WHERE id_ticket = %s;"
             ticket = cursor.execute(query_delete, (id_ticket,))
             self.close_connection_db()
-            return 200, 'Registro eliminado.'
+            return 200, ticket
         except Exception as e:
             self.close_connection_db()   
             return 500, str(e)
@@ -139,7 +139,7 @@ class TicketCrud(TicketServices):
             self.init_connection_db()
             cursor = self._connection_db.cursor()
             query_request = '''
-                          SELECT ticket.asunto_ticket, ticket.descripcion_ticket, usuario.nombre_usuario, 
+                          SELECT ticket.id_ticket, ticket.asunto_ticket, ticket.descripcion_ticket, ticket.fecha_creacion_ticket, ticket.categoria_ticket, usuario.nombre_usuario, 
                           usuario.apellido_paterno, usuario.apellido_materno, area.nombre_area FROM ticket JOIN usuario 
                           ON ticket.id_usuario = usuario.id_usuario JOIN area ON usuario.id_area = area.id_area
             '''

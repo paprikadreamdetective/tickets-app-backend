@@ -18,11 +18,14 @@ class ProxyTicket(TicketServices): # Common interface
     def read_all_tickets(self):
         return self._real_subject.read_all_tickets()
     
+    def read_profile_pic(self, id_user: str):
+        return self._real_subject.read_profile_pic(id_user)
+    
     def update_ticket_state(self):
         pass
     
-    def delete_ticket(self):
-        pass
+    def delete_ticket(self, id_ticket):
+        return self._real_subject.delete_ticket(id_ticket)
 
     def get_tickets(self):
         return self._real_subject.get_tickets()
