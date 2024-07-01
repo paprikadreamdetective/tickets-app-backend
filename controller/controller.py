@@ -100,6 +100,7 @@ def edit_user():
         'id_equipo' : 1
     }
     result, message, status_code = ProxyUser(UserCrud('databasetickets')).update_user(update_user)
+    print(result, message, status_code)
     if result and status_code == 200:
         return jsonify({'success' : True, 'message' : message})
     else: 

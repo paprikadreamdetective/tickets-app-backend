@@ -27,8 +27,8 @@ class ProxyUser(UserServices):
     def read_profile_pic(self, id_user):
         return self._real_subject.read_profile_pic(id_user)
     
-    def update_user(self):
-        return super().update_user()
+    def update_user(self, user):
+        return self._real_subject.update_user(user)
 
     def update_user_name(self, update_user):
         return self._real_subject.update_user_name(update_user)
