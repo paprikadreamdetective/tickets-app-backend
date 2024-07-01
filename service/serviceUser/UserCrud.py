@@ -107,6 +107,8 @@ class UserCrud(UserServices):
                 usuario.apellido_paterno,
                 usuario.apellido_materno,
                 usuario.correo_usuario,
+                usuario.rol_usuario,
+                area.id_area,
                 area.nombre_area
                 FROM usuario JOIN area ON usuario.id_area = area.id_area;
             """
@@ -164,7 +166,7 @@ class UserCrud(UserServices):
                     id_area = %s
                 WHERE id_usuario = %s;
             """
-            cursor.execute(query_update, (
+            result_query_update = cursor.execute(query_update, (
                 user['nombre_usuario'],
                 user['apellido_paterno'],
                 user['apellido_materno'],
@@ -175,10 +177,10 @@ class UserCrud(UserServices):
             ))
             cursor.close()
             self.close_connection_db()
-            return 200, "Usuario actualizado exitosamente"
+            return result_query_update, "Usuario actualizado exitosamente", 200 
         except Exception as e:
             self.close_connection_db()   
-            return 500, str(e)
+            return result_query_update, str(e),  500
 
     def update_user_name(self, user: dict):
         try:

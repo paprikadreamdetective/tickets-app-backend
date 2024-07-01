@@ -15,7 +15,6 @@ import os
 import datetime
 import base64
 
-
 @app.route("/@me")
 def get_current_session():
     user_id = session.get("user_id")
@@ -86,15 +85,31 @@ def remove_user(id):
         return jsonify({'success' : result, 'message': 'Usuario no encontrado'})
     else:
         return jsonify({'success' : False, 'message': result})
-        
-    
+
+@app.route('/edit_user', methods=['POST', 'GET'])
+def edit_user():
+    update_user = {
+        'id_usuario' : request.json['id_usuario'], 
+        'nombre_usuario' : request.json['nombre_usuario'],
+        'apellido_paterno' : request.json['apellido_paterno'],
+        'apellido_materno' : request.json['apellido_materno'], 
+        'correo_usuario' : request.json['correo_usuario'],
+        'password_usuario' : request.json['password_usuario'],
+        'rol_usuario' : request.json['rol_usuario'],
+        'id_area' : request.json['id_area'],
+        'id_equipo' : 1
+    }
+    result, message, status_code = ProxyUser(UserCrud('databasetickets')).update_user(update_user)
+    if result and status_code == 200:
+        return jsonify({'success' : True, 'message' : message})
+    else: 
+        return jsonify({'success' : False, 'message' : message})
 
 @app.route('/change_profile_pic', methods=['POST'])
 def change_profile_pic():
     try:
         id_user = request.form['id']
         profile_pic = request.files['file'].read()
-        
         result, status_code = ProxyUser(UserCrud('databasetickets')).update_profile_pic(id_user, profile_pic)
         print(result, status_code)
         return jsonify({"message": "Imagen subida correctamente."})
@@ -103,14 +118,12 @@ def change_profile_pic():
     
 @app.route('/get_profile_pic/<string:id>', methods=['POST','GET'])
 def get_profile_pic(id):
-    
     status_code, user = ProxyUser(UserCrud('databasetickets')).read_profile_pic(id)
     print(status_code, user['id'])
     if status_code == 200:
         return jsonify({'status_code' : 200, 'message': 'Datos Correctos', 'user' : user })
     return jsonify({'status_code' : 500, 'message' : 'error al obtener la imagen', 'user' : None})
         
-#base64.b64encode(pic).decode('utf-8') if pic != None else None
 @app.route('/get_tickets', methods=['GET'])
 def get_tickets():
     status_code, tickets = ProxyTicket(TicketCrud('databasetickets')).get_tickets()
