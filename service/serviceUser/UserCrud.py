@@ -86,15 +86,15 @@ class UserCrud(UserServices):
                 cursor.close()
                 self.close_connection_db()
                 print('Usuario insertado', user)
-                return 'Usuario insertado', 200
+                return True, 'Usuario insertado', 200
             else:
                 self.close_connection_db()
                 print("El usuario ya existe en la base de datos. No se ha realizado la inserción.")
-                return 'El usuario ya existe en la base de datos. No se ha realizado la inserción.', 400
+                return False, 'El usuario ya existe en la base de datos. No se ha realizado la inserción.', 400
         except Exception as e:
             self.close_connection_db()   
             print('Error al insertar usuario', e)
-            return 'Error al insertar usuario', 500
+            return False, 'Error al insertar usuario', 500
        
     def read_users(self):
         try:
@@ -107,7 +107,6 @@ class UserCrud(UserServices):
                 usuario.apellido_paterno,
                 usuario.apellido_materno,
                 usuario.correo_usuario,
-                usuario.foto_perfil,
                 area.nombre_area
                 FROM usuario JOIN area ON usuario.id_area = area.id_area;
             """

@@ -68,15 +68,26 @@ def add_user():
         'id_area' : request.json['id_area'],
         'id_equipo' : 1
     }
-    return register_user(new_user)
+    result, message, status_code = register_user(new_user)
+    if result and status_code == 200:
+        return jsonify({'success' : result, 'message' : message})
+    elif not result and status_code == 500:
+        return jsonify({'success' : result, 'message' : message})
+    else:
+        return jsonify({'success' : result, 'message' : message})
 
 @app.route('/remove_user/<string:id>', methods=['POST'])
 def remove_user(id):
     status_code, result = delete_user(id)
     print("Valores: ", status_code, result)
-    if not result:
-        return jsonify({'message': 'Usuario no encontrado'}), status_code
-    return jsonify({'message': 'Usuario eliminado exitosamente'}), status_code
+    if result and status_code == 200:
+        return jsonify({'success' : result, 'message': 'Usuario eliminado exitosamente'})
+    elif not result and status_code == 200:
+        return jsonify({'success' : result, 'message': 'Usuario no encontrado'})
+    else:
+        return jsonify({'success' : False, 'message': result})
+        
+    
 
 @app.route('/change_profile_pic', methods=['POST'])
 def change_profile_pic():
