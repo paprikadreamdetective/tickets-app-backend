@@ -167,7 +167,7 @@ patrones de diseño 03/07/2024
 def get_db_connection():
     return pymysql.connect(
         host='localhost',
-        port=3306,
+        port=3309,
         user='root',
         password='',
         database='databasetickets',
@@ -184,8 +184,10 @@ def get_messages():
         sql = "SELECT * FROM messages WHERE (sender_id = %s AND receiver_id = %s) OR (sender_id = %s AND receiver_id = %s) ORDER BY timestamp"
         cursor.execute(sql, (sender_id, receiver_id, receiver_id, sender_id))
         messages = cursor.fetchall()
+        for message in messages:
+            message['timestamp'] = message['timestamp'].isoformat()
     
-    conn.close()
+        conn.close()
     return jsonify(messages)
 
 @app.route('/send_message', methods=['POST'])
