@@ -15,6 +15,7 @@ import os
 import pymysql
 import datetime
 import base64
+import pymysql
 
 @app.route("/@me")
 def get_current_session():
@@ -158,14 +159,15 @@ def remove_ticket(id):
     return jsonify({'message': 'Ticket eliminado exitosamente'}), status_code
 
 '''
-A partir de este punto se dejaron de usar patrones de diseño:
-            02/07/2024
+A partir de este punto se dejaron de usar
+patrones de diseño 03/07/2024
 
 '''
+
 def get_db_connection():
     return pymysql.connect(
         host='localhost',
-        port=3309,
+        port=3306,
         user='root',
         password='',
         database='databasetickets',
@@ -182,20 +184,15 @@ def get_messages():
         sql = "SELECT * FROM messages WHERE (sender_id = %s AND receiver_id = %s) OR (sender_id = %s AND receiver_id = %s) ORDER BY timestamp"
         cursor.execute(sql, (sender_id, receiver_id, receiver_id, sender_id))
         messages = cursor.fetchall()
-        # Convert timestamps to strings
-        for message in messages:
-            message['timestamp'] = message['timestamp'].isoformat()
-        print(messages)
     
     conn.close()
     return jsonify(messages)
 
 @app.route('/send_message', methods=['POST'])
 def send_message():
-    data = request.get_json()
-    sender_id = data['sender_id']
-    receiver_id = data['receiver_id']
-    message = data['message']
+    sender_id = request.json['sender_id']
+    receiver_id = request.json['receiver_id']
+    message = request.json['msg']
     
     conn = get_db_connection()
     with conn.cursor() as cursor:
@@ -204,4 +201,4 @@ def send_message():
         conn.commit()
     
     conn.close()
-    return jsonify({"status": "Message sent"}) 
+    return jsonify({"status": "Message sent"})
