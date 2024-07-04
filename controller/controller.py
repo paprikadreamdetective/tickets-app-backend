@@ -12,6 +12,7 @@ from app import app
 from flask import request, jsonify, session
 from werkzeug.utils import secure_filename
 import os
+import pymysql
 import datetime
 import base64
 
@@ -156,3 +157,51 @@ def remove_ticket(id):
         return jsonify({'message': 'Ticket no encontrado'}), status_code
     return jsonify({'message': 'Ticket eliminado exitosamente'}), status_code
 
+'''
+A partir de este punto se dejaron de usar patrones de diseño:
+            02/07/2024
+
+'''
+def get_db_connection():
+    return pymysql.connect(
+        host='localhost',
+        port=3309,
+        user='root',
+        password='',
+        database='databasetickets',
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
+@app.route('/get_messages', methods=['GET'])
+def get_messages():
+    sender_id = request.args.get('sender_id')
+    receiver_id = request.args.get('receiver_id')
+    
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        sql = "SELECT * FROM messages WHERE (sender_id = %s AND receiver_id = %s) OR (sender_id = %s AND receiver_id = %s) ORDER BY timestamp"
+        cursor.execute(sql, (sender_id, receiver_id, receiver_id, sender_id))
+        messages = cursor.fetchall()
+        # Convert timestamps to strings
+        for message in messages:
+            message['timestamp'] = message['timestamp'].isoformat()
+        print(messages)
+    
+    conn.close()
+    return jsonify(messages)
+
+@app.route('/send_message', methods=['POST'])
+def send_message():
+    data = request.get_json()
+    sender_id = data['sender_id']
+    receiver_id = data['receiver_id']
+    message = data['message']
+    
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        sql = "INSERT INTO messages (sender_id, receiver_id, message) VALUES (%s, %s, %s)"
+        cursor.execute(sql, (sender_id, receiver_id, message))
+        conn.commit()
+    
+    conn.close()
+    return jsonify({"status": "Message sent"}) 
