@@ -167,7 +167,7 @@ patrones de diseño 03/07/2024
 def get_db_connection():
     return pymysql.connect(
         host='localhost',
-        port=3309,
+        port=3306,
         user='root',
         password='',
         database='databasetickets',
