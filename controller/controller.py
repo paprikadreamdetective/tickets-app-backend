@@ -204,3 +204,45 @@ def send_message():
     
     conn.close()
     return jsonify({"status": "Message sent"})
+
+@app.route('/get_areas', methods=['GET'])
+def get_areas():
+    #sender_id = request.args.get('sender_id')
+    #receiver_id = request.args.get('receiver_id')
+    
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        # sql = "SELECT * FROM messages WHERE (sender_id = %s AND receiver_id = %s) OR (sender_id = %s AND receiver_id = %s) ORDER BY timestamp"
+        sql_query = """
+            SELECT * FROM area ; 
+        """
+        cursor.execute(sql_query)
+        areas = cursor.fetchall()
+        for area in areas:
+            print(area)
+        
+    
+        conn.close()
+    return jsonify(areas)
+
+# obtener empleados por area:
+@app.route('/get_area_users', methods=['GET'])
+def get_area_users():
+    #sender_id = request.args.get('sender_id')
+    #receiver_id = request.args.get('receiver_id')
+    area = request.args.get('area')
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        # sql = "SELECT * FROM messages WHERE (sender_id = %s AND receiver_id = %s) OR (sender_id = %s AND receiver_id = %s) ORDER BY timestamp"
+        sql_query = """
+            SELECT * FROM usuario JOIN area ON usuario.id_area = area.id_area WHERE area.id_area = %s ; 
+        """
+        cursor.execute(sql_query, (area))
+        users_per_area = cursor.fetchall()
+        for user in users_per_area:
+            print(user)
+        
+    
+        conn.close()
+    return jsonify(users_per_area)
+
