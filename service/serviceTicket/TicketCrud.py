@@ -8,7 +8,7 @@ class TicketCrud(TicketServices):
         self._connection_db = None
     
     def init_connection_db(self) -> None:
-        self._connection_db = pymysql.connect(host='localhost', port=3306, user='root', passwd='', database=self._db_name, cursorclass=pymysql.cursors.DictCursor)
+        self._connection_db = pymysql.connect(host='localhost', port=3309, user='root', passwd='', database=self._db_name, cursorclass=pymysql.cursors.DictCursor)
 
     def close_connection_db(self) -> None:
         self._connection_db.commit()
@@ -139,7 +139,7 @@ class TicketCrud(TicketServices):
             self.init_connection_db()
             cursor = self._connection_db.cursor()
             query_request = '''
-                          SELECT ticket.id_ticket, ticket.asunto_ticket, ticket.descripcion_ticket, ticket.fecha_creacion_ticket, ticket.categoria_ticket, usuario.nombre_usuario, 
+                          SELECT ticket.id_ticket, ticket.asunto_ticket, ticket.descripcion_ticket, ticket.fecha_creacion_ticket, ticket.categoria_ticket, ticket.id_usuario, usuario.nombre_usuario, 
                           usuario.apellido_paterno, usuario.apellido_materno, area.nombre_area FROM ticket JOIN usuario 
                           ON ticket.id_usuario = usuario.id_usuario JOIN area ON usuario.id_area = area.id_area
             '''

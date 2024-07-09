@@ -167,7 +167,7 @@ patrones de diseño 03/07/2024
 def get_db_connection():
     return pymysql.connect(
         host='localhost',
-        port=3306,
+        port=3309,
         user='root',
         password='',
         database='databasetickets',
@@ -245,4 +245,3 @@ def get_area_users():
     
         conn.close()
     return jsonify(users_per_area)
-
