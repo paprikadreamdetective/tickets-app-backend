@@ -130,16 +130,26 @@ def get_profile_pic(id):
 @app.route('/get_tickets', methods=['GET'])
 def get_tickets():
     status_code, tickets = ProxyTicket(TicketCrud('databasetickets')).get_tickets()
-    print(tickets)
+    #print(tickets)
+    
     if not tickets:
         return jsonify({"error": "No hay tickets"}), 401
+    
+    for ticket in tickets:
+    # Asegúrate de que 'captura_pantalla_ticket' existe y no es None
+        if 'captura_pantalla_ticket' in ticket and ticket['captura_pantalla_ticket'] is not None:
+        # Codificar 'captura_pantalla_ticket' en base64 si es de tipo bytes
+            if isinstance(ticket['captura_pantalla_ticket'], bytes):
+                ticket['captura_pantalla_ticket'] = base64.b64encode(ticket['captura_pantalla_ticket']).decode('utf-8')
+            else:
+                ticket['captura_pantalla_ticket'] = None  # O alguna otra acción apropiada si no es bytes
     return jsonify(tickets)
 
 @app.route('/add_ticket', methods=['POST'])
 def add_ticket():
-    print(request.json)
-    year, month, day = map(int, request.json['fecha_creacion'].split('-'))
-    print(year, month, day)
+    #print(request.json)
+    #year, month, day = map(int, request.json['fecha_creacion'].split('-'))
+    #print(year, month, day)
     '''
     new_ticket = {
         'asunto_ticket' : request.json['asunto_ticket'], 
@@ -151,15 +161,16 @@ def add_ticket():
     }
     '''
     new_ticket = {
-        'asunto_ticket' : request.form.get('asunto_ticket'), 
-        'descripcion_ticket' : request.form.get('descripcion_ticket'),
-        'fecha_creacion_ticket' : request.form.get('fecha_creacion'),
-        'categoria_ticket' : request.form.get('categoria_ticket'), 
-        'id_usuario' : request.form.get('id_usuario'),
-        'id_estado' : request.form.get('id_estado')
+        'asunto_ticket' : request.form['asunto_ticket'], 
+        'descripcion_ticket' : request.form['descripcion_ticket'],
+        'fecha_creacion_ticket' : request.form['fecha_creacion'],
+        'categoria_ticket' : request.form['categoria_ticket'], 
+        'id_usuario' : request.form['id_usuario'],
+        'id_estado' : request.form['id_estado']
     }
-    print(request.files['file'].read())
-    message, status_code = ProxyTicket(TicketCrud('databasetickets')).create_ticket(new_ticket, request.files['file'].read())
+    
+    screenshot = request.files['file'].read()
+    message, status_code = ProxyTicket(TicketCrud('databasetickets')).create_ticket(new_ticket, screenshot)
     if status_code == 200:
         return jsonify({'success' : True, 'message' : message})
     else:
@@ -182,7 +193,7 @@ patrones de diseño 03/07/2024
 def get_db_connection():
     return pymysql.connect(
         host='localhost',
-        port=3309,
+        port=3306,
         user='root',
         password='',
         database='databasetickets',

@@ -15,7 +15,7 @@ class UserCrud(UserServices):
         self._connection_db = None
 
     def init_connection_db(self) -> None:
-        self._connection_db = pymysql.connect(host='localhost', port=3309, user='root', passwd='', database=self._db_name, cursorclass=pymysql.cursors.DictCursor)
+        self._connection_db = pymysql.connect(host='localhost', port=3306, user='root', passwd='', database=self._db_name, cursorclass=pymysql.cursors.DictCursor)
 
     def close_connection_db(self) -> None:
         self._connection_db.commit()
@@ -138,7 +138,6 @@ class UserCrud(UserServices):
     def read_profile_pic(self, id_user: str):
         try:
             self.init_connection_db()
-
             cursor = self._connection_db.cursor()
             query_select = "SELECT id_usuario, foto_perfil FROM usuario WHERE id_usuario = %s;"
             cursor.execute(query_select, (id_user,))
