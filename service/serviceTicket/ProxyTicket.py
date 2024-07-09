@@ -9,8 +9,8 @@ class ProxyTicket(TicketServices): # Common interface
     def __init__(self, real_subject):
         self._real_subject = real_subject
 
-    def create_ticket(self, ticket):
-        return self._real_subject.create_ticket(ticket)
+    def create_ticket(self, ticket, pic):
+        return self._real_subject.create_ticket(ticket, pic)
   
     def read_ticket(self):
         return self._real_subject.read_ticket()

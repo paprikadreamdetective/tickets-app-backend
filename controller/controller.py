@@ -140,6 +140,7 @@ def add_ticket():
     print(request.json)
     year, month, day = map(int, request.json['fecha_creacion'].split('-'))
     print(year, month, day)
+    '''
     new_ticket = {
         'asunto_ticket' : request.json['asunto_ticket'], 
         'descripcion_ticket' : request.json['descripcion_ticket'],
@@ -148,7 +149,21 @@ def add_ticket():
         'id_usuario' : request.json['id_usuario'],
         'id_estado' : request.json['id_estado']
     }
-    return ProxyTicket(TicketCrud('databasetickets')).create_ticket(new_ticket)
+    '''
+    new_ticket = {
+        'asunto_ticket' : request.form.get('asunto_ticket'), 
+        'descripcion_ticket' : request.form.get('descripcion_ticket'),
+        'fecha_creacion_ticket' : request.form.get('fecha_creacion'),
+        'categoria_ticket' : request.form.get('categoria_ticket'), 
+        'id_usuario' : request.form.get('id_usuario'),
+        'id_estado' : request.form.get('id_estado')
+    }
+    print(request.files['file'].read())
+    message, status_code = ProxyTicket(TicketCrud('databasetickets')).create_ticket(new_ticket, request.files['file'].read())
+    if status_code == 200:
+        return jsonify({'success' : True, 'message' : message})
+    else:
+        return jsonify({'success' : False, 'message' : message})
 
 @app.route('/remove_ticket/<int:id>', methods=['POST'])
 def remove_ticket(id):

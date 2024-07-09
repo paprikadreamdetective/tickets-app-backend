@@ -15,7 +15,7 @@ class TicketCrud(TicketServices):
         self._connection_db.close()
 
 
-    def create_ticket(self, ticket: dict):
+    def create_ticket(self, ticket: dict, pic):
         try:
             self.init_connection_db()
             cursor = self._connection_db.cursor()
@@ -26,8 +26,9 @@ class TicketCrud(TicketServices):
                         fecha_creacion_ticket, 
                         categoria_ticket, 
                         id_usuario, 
-                        id_estado
-                        ) VALUES (%s, %s, %s, %s, %s, %s)
+                        id_estado,
+                        captura_pantalla_ticket
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
                 """
             cursor.execute(query_insert, (
                     ticket['asunto_ticket'],
@@ -35,7 +36,8 @@ class TicketCrud(TicketServices):
                     ticket['fecha_creacion_ticket'],
                     ticket['categoria_ticket'],
                     ticket['id_usuario'],
-                    int(ticket['id_estado'])
+                    int(ticket['id_estado']),
+                    pic
                 ))
             cursor.close()
             self.close_connection_db()
@@ -138,11 +140,24 @@ class TicketCrud(TicketServices):
         try:
             self.init_connection_db()
             cursor = self._connection_db.cursor()
-            query_request = '''
-                          SELECT ticket.id_ticket, ticket.asunto_ticket, ticket.descripcion_ticket, ticket.fecha_creacion_ticket, ticket.categoria_ticket, ticket.id_usuario, usuario.nombre_usuario, 
-                          usuario.apellido_paterno, usuario.apellido_materno, area.nombre_area FROM ticket JOIN usuario 
-                          ON ticket.id_usuario = usuario.id_usuario JOIN area ON usuario.id_area = area.id_area
-            '''
+            query_request = """
+                SELECT ticket.id_ticket, 
+                ticket.asunto_ticket, 
+                ticket.descripcion_ticket, 
+                ticket.fecha_creacion_ticket, 
+                ticket.categoria_ticket, 
+                ticket.id_usuario,
+                estado.id_estado,
+                estado.estado_actual, 
+                usuario.nombre_usuario, 
+                usuario.apellido_paterno, 
+                usuario.apellido_materno, 
+                area.nombre_area 
+                FROM ticket 
+                JOIN usuario ON ticket.id_usuario = usuario.id_usuario
+                JOIN estado ON ticket.id_estado = estado.id_estado 
+                JOIN area ON usuario.id_area = area.id_area
+            """
             cursor.execute(query_request)
             self.close_connection_db()
             tickets = cursor.fetchall()
